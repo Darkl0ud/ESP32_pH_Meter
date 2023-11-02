@@ -1,30 +1,24 @@
+/* Made by Darkloud for the DIY-MORE PH-4502C pH controller board and used specifically
+ on the ESP32-S3 DevKitC */
+
 #include <Arduino.h>
 
-#define RGB_BRIGHTNESS 10 //  Brightness setting for RGB LEDs
+#define RGB_BRIGHTNESS 1 //  Brightness setting for RGB LEDs
 #define PH_READ_PIN 8 // GPIO 8, assigned to pH probe analog input
-//#define EC_READ_PIN 37 // GPIO 37, assigned to EC probe analog input
-//#define PH_UP_PUMP 36 // GPIO 36, assigned to activating pH Up pump
-//#define PH_DOWN_PUMP 35 // GPIO 35, assigned to activating pH Down pump
-//#define NUTE_A_PUMP 34 // GPIO 34, assigned to activating Nutrient Part A pump
-//#define NUTE_B_PUMP 33 // GPIO 33, assigned to activating Nutrient Part B pump
-//#define NUTE_EPSOM_PUMP 32 // GPIO 32, assigned to activating Epsom Salt pump
 
-unsigned long previousMillis = 0;  // will store last time the task was executed
+float fpHArray[10];
+int j;
+unsigned long currentMillis = millis();
+static unsigned long fLastMillis;  // Last millisec trig
+static unsigned long fLastSecond; // Last second trig
 
 void setup() {
-  Serial.begin(115200);
   neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0,0);
-
+  Serial.begin(115200);
   pinMode(PH_READ_PIN, INPUT);
-  //pinMode(EC_READ_PIN, INPUT);
-  //pinMode(PH_UP_PUMP, OUTPUT);
-  //pinMode(PH_DOWN_PUMP, OUTPUT);
-  //pinMode(NUTE_A_PUMP, OUTPUT);
-  //pinMode(NUTE_B_PUMP, OUTPUT);
-  //pinMode(NUTE_EPSOM_PUMP, OUTPUT);
 }
 
-void SetDeviceState(int state) {
+void SetDeviceState(int state) {  // Sets various indicators depending upon system status
 
   switch (state) {
 
@@ -48,31 +42,47 @@ void SetDeviceState(int state) {
   }
 }
 
+void RunpH() {
+  currentMillis = millis();
+
+  if (currentMillis - fLastMillis >= 100) {
+    fLastMillis = currentMillis;  // Save the current time
+    fpHArray[j] = analogRead(PH_READ_PIN) / 4095.0 * 3.3 * 4.24; // 4.24 = 14/3.3
+    j++;
+  }
+   
+  if (currentMillis - fLastSecond >= 1000) {
+    fLastSecond = currentMillis;  // Save the current time
+    j = 0; // Resets j to 0
+    int maxIndex = 0; // Resets maxIndex to 0
+    int minIndex = 0; // Resets minIndex to 0
+
+    for (int i = 0; i < 10; i++) {  // Check each reading that we put in the array if our max or min number is higher or lower
+      if (fpHArray[i] > fpHArray[maxIndex]) {
+        maxIndex = i;
+      }
+      if (fpHArray[i] < fpHArray[minIndex]) {
+        minIndex = i;
+      }
+    }
+
+    fpHArray[maxIndex] = 0; // Set the highest value in the pH array to 0 so it is not counted in average.
+    fpHArray[minIndex] = 0; // Set the lowest value in the pH array to 0 so it is not counted in average.
+    float sum = 0;  // Initializes sum variable to 0 for use with determining average pH over the given 10 readings
+    int count = 0;  // Initializes count variable to 0, which holds how many pH readings above 0 we have
+
+    for (int i = 0; i < 10; i++) {  // Check each value in pH array. If not 0, add it to sum and increase count.
+      if (fpHArray[i] != 0) {
+        sum += fpHArray[i];
+        count++;
+      }
+    }
+    
+    float fpHAverage = sum/count; // Calculate average of pH readings over 1 second
+  }  
+}
+
 void loop() {
   SetDeviceState(0);
-
-  //float fAnalog_value = analogRead(PH_READ_PIN); 
-  //float fVoltage = fAnalog_value / 4095 * 3.3;
-  float fpH = analogRead(PH_READ_PIN) / 4095 * 3.3 * 4.24; // 4.24 = 14/3.3
-  //Serial.print("fAnalog_value:"); 
-  //Serial.print(fAnalog_value); 
-  //Serial.print(" fVoltage:"); 
-  //Serial.print(fVoltage); 
-  //Serial.print("pH: "); 
-  //Serial.println(fpH); ;
-  
-  unsigned long currentMillis = millis();  // grab the current time
-
-   // Check if 1 second has elapsed
-  if (currentMillis - previousMillis >= 1000) {
-    // Save the current time
-    previousMillis = currentMillis;
-
-    // Perform your task here, this will repeat every 1 second
-    // Code for the task goes here
-
-    // Example: print a message every second
-    Serial.println("Task executed every 1 second");
-  }
-
+  RunpH();
 }
