@@ -1,9 +1,45 @@
-/* Made by Darkloud for the DIY-MORE PH-4502C pH controller board and used specifically
- on the ESP32-S3 DevKitC*/
+/* Made by Darkloud using DIY-MORE PH-4502C pH controller board and used specifically
+ on the ESP32-S3 DevKitC */
 
 #include <main.h>
 
-void SetDeviceState(char state) {  // Sets various indicators depending upon system status.
+void IRAM_ATTR buttonUpPressed() {
+  if (digitalRead(UP_BUTTON_PIN) == 1)  {
+    bUpPressed = true;
+  }
+  else  {
+    bUpPressed = false;
+  }
+}
+
+void IRAM_ATTR buttonDownPressed() {
+  if (digitalRead(DOWN_BUTTON_PIN) == 1)  {
+    bDownPressed = true;
+  }
+  else  {
+    bDownPressed = false;
+  }
+}
+
+void IRAM_ATTR buttonLeftPressed() {
+  if (digitalRead(LEFT_BUTTON_PIN) == 1)  {
+    bLeftPressed = true;
+  }
+  else  {
+    bLeftPressed = false;
+  }
+}
+
+void IRAM_ATTR buttonRightPressed() {
+  if (digitalRead(RIGHT_BUTTON_PIN) == 1)  {
+    bRightPressed = true;
+  }
+  else  {
+    bRightPressed = false;
+  }
+}
+
+void setDeviceState(char state) {  // Sets various indicators depending upon system status.
 
   switch (state) {
 
@@ -24,13 +60,112 @@ void SetDeviceState(char state) {  // Sets various indicators depending upon sys
   }
 }
 
-void RunpH()  {
+void uiHandler(){   // Handles UI IO
+  switch (cSelectedMenuTab) {
+  case 0:
+    dUI.DisplayUpdate(0,fpHAverage,fpHTarget,0, bpHTimerEnded); // Update display with pH parameters.
+
+    if (bUpPressed)
+    {
+      cSelectedMenuTab = 2;
+      bUpPressed = false;
+    }
+
+    else if (bDownPressed)
+    {
+      cSelectedMenuTab = 1;
+      bDownPressed = false;
+    }
+    break;
   
-  lCurrentMillis = millis();
+  case 1:
+    dUI.DisplayUpdate(1,fpHAverage,fpHTarget,0, bpHTimerEnded); // Update display with EC parameters.
 
-  if (lCurrentMillis - lLastMillis >= 100)  { // Once 100ms have passed...
-    lLastMillis = lCurrentMillis;  // Save the current time.
+    if (bUpPressed)
+    {
+      cSelectedMenuTab = 0;
+      bUpPressed = false;
+    }
+    
+    else if (bDownPressed)
+    {
+      cSelectedMenuTab = 2;
+      bDownPressed = false;
+    }
+    break;
 
+  case 2:
+    /* When Set tab is active... */
+    if (bMenuTabActive) // If menu is active...
+    {
+      dUI.DisplayUpdate(2,fpHAverage,fpHTarget,1, bpHTimerEnded); // Update display with Setting parameters.
+
+      if (bLeftPressed)
+      {
+        bMenuTabActive = false;
+        bLeftPressed = false;
+      }
+      
+      if (bUpPressed)
+      {
+        fpHTarget = fpHTarget + 0.1;
+        bUpPressed = false;
+      }
+    
+      else if (bDownPressed)
+      {
+        fpHTarget = fpHTarget - 0.1;
+        bDownPressed = false;
+      }
+    }
+    
+    else  // If menu is not active
+    {
+      dUI.DisplayUpdate(2,fpHAverage,fpHTarget,0, bpHTimerEnded); // Update display with Setting parameters.
+
+      if (bUpPressed)
+      {
+        cSelectedMenuTab = 1;
+        bUpPressed = false;
+      }
+    
+      else if (bDownPressed)
+      {
+        cSelectedMenuTab = 0;
+        bDownPressed = false;
+      }
+
+      else if (bRightPressed)
+      {
+        bMenuTabActive = true;
+        bRightPressed = false;
+      }
+    }
+  default:
+    break;
+  }
+}
+
+void setup()  {
+  Serial.begin(115200);
+  setDeviceState(0);  // Set device state to 0, 'running'
+  pinMode(PH_READ_PIN, INPUT);
+  pinMode(UP_BUTTON_PIN, INPUT_PULLDOWN);
+  pinMode(DOWN_BUTTON_PIN, INPUT_PULLDOWN);
+  pinMode(LEFT_BUTTON_PIN, INPUT_PULLDOWN);
+  pinMode(RIGHT_BUTTON_PIN, INPUT_PULLDOWN);
+  attachInterrupt(UP_BUTTON_PIN, buttonUpPressed, CHANGE);
+  attachInterrupt(DOWN_BUTTON_PIN, buttonDownPressed, CHANGE);
+  attachInterrupt(LEFT_BUTTON_PIN, buttonLeftPressed, CHANGE);
+  attachInterrupt(RIGHT_BUTTON_PIN, buttonRightPressed, CHANGE);
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); // Initialize Wire with custom SDA and SCL pins
+  dUI.InitDisplay();
+  dUI.DisplayUpdate(0,fpHAverage,fpHTarget,0, bpHTimerEnded); // Initial Display Update.
+}
+
+void calculateAveragepH() {
+    if (lCurrentMillis - lLastpHMillis >= 100)  { // Once 100ms have passed...
+    lLastpHMillis = lCurrentMillis;  // Save the current time.
     rawAnalog = analogRead(PH_READ_PIN) / 4095.0; // Read from pH probe. Gives an analog 0-1 value.
     float b;
     float pH;
@@ -54,7 +189,6 @@ void RunpH()  {
       b = 4 - ((4.0 - 0.0) / (fpH4Cal - fpH0Cal)) * fpH4Cal;  // Calculate Y Intercept based off of pH Calibration slope.
       pH = ((4.0 - 0.0) / (fpH4Cal - fpH0Cal)) * rawAnalog + b;
     }
-
     fpHAnalogArray[j] = pH;
     j++;
   }
@@ -86,103 +220,61 @@ void RunpH()  {
       }
     }
     fpHAverage = fSum/cCount; // Calculate average of pH readings over 1 second
-  }  
-}
-
-void CalibratepH()  {
-  Serial.println("Please rinse off probe and place in pH 4 solution, wait until reading is stable, then press button to lock in calibration. ");
-  // Wait for button press.
-  rawAnalog = analogRead(PH_READ_PIN) / 4095.0;
-  fpH4Cal = rawAnalog;
-
-  Serial.println("Please rinse off probe and place in pH 7 solution, wait until reading is stable, then press button to lock in calibration. ");
-  // Wait for button press.
-  rawAnalog = analogRead(PH_READ_PIN) / 4095.0;
-  fpH7Cal = rawAnalog;
-
-  Serial.println("Please rinse off probe and place in pH 10 solution, wait until reading is stable, then press button to lock in calibration. ");
-  // Wait for button press.
-  rawAnalog = analogRead(PH_READ_PIN) / 4095.0;
-  fpH10Cal = rawAnalog;
-}
-
-void UpdateUI() {
-  Serial.print("pH: ");
-  Serial.println(fpHAverage, 8);
-}
-
-void IRAM_ATTR ButtonUpPressed() {
-  if (digitalRead(UP_BUTTON_PIN) == 1)  {
-    bUpPressed = true;
   }
-  else  {
-    bUpPressed = false;
-  }
-}
-
-void IRAM_ATTR ButtonDownPressed() {
-  if (digitalRead(DOWN_BUTTON_PIN) == 1)  {
-    bDownPressed = true;
-  }
-  else  {
-    bDownPressed = false;
-  }
-}
-
-void IRAM_ATTR ButtonLeftPressed() {
-  if (digitalRead(LEFT_BUTTON_PIN) == 1)  {
-    bLeftPressed = true;
-  }
-  else  {
-    bLeftPressed = false;
-  }
-}
-
-void IRAM_ATTR ButtonRightPressed() {
-  if (digitalRead(RIGHT_BUTTON_PIN) == 1)  {
-    bRightPressed = true;
-  }
-  else  {
-    bRightPressed = false;
-  }
-}
-
-void setup()  {
-  Serial.begin(115200);
-  SetDeviceState(0);  // Set device state to 0, 'running'
-  pinMode(PH_READ_PIN, INPUT);
-  pinMode(UP_BUTTON_PIN, INPUT_PULLDOWN);
-  pinMode(DOWN_BUTTON_PIN, INPUT_PULLDOWN);
-  pinMode(LEFT_BUTTON_PIN, INPUT_PULLDOWN);
-  pinMode(RIGHT_BUTTON_PIN, INPUT_PULLDOWN);
-  attachInterrupt(UP_BUTTON_PIN, ButtonUpPressed, CHANGE);
-  attachInterrupt(DOWN_BUTTON_PIN, ButtonDownPressed, CHANGE);
-  attachInterrupt(LEFT_BUTTON_PIN, ButtonLeftPressed, CHANGE);
-  attachInterrupt(RIGHT_BUTTON_PIN, ButtonRightPressed, CHANGE);
 }
 
 void loop() {
-  switch (cCurrentMenu)
+  lCurrentMillis = millis();
+  calculateAveragepH();
+
+  if (fpHTarget != 0) // If we have a pH Target set....
   {
-    case 0: // Home Screen
-      if (bUpPressed)
+    if (!bWaitForMix) // If we are not waiting for mixture to become homogenous...
+    {
+      if (fpHAverage <= (fpHTarget - 0.2))  //If pH drifts from Target pH - 0.2...
       {
-        /* code */
+        bpHUnderRange = true;
+        bpHOverRange = false;
+      }
+  
+      else if (fpHAverage >= (fpHTarget + 0.2))  //If pH drifts from Target pH + 0.2...
+      {
+        bpHUnderRange = false;
+        bpHOverRange = true;
       }
       
-      break;
-  
-    case 1: // pH Menu
-      break;
+      else  // If pH is within range...
+      {
+        bpHUnderRange = false;
+        bpHOverRange = false;
+      }
 
-    case 2: // EC Menu
-      break;
-    
-    case 3: // Settings
-      break;
+      if (bpHUnderRange || bpHOverRange)  // If pH is out of range...
+      {
+        if (!bpHTimerStarted) // If we don't have a timer started already, then start a timer. If we do, then see if timer has expired.
+        {
+          lTimerStartMillis = lCurrentMillis;
+          bpHTimerStarted = true;
+        }
+        else  // Timer already started
+        {
+          if (lCurrentMillis >= lTimerStartMillis + 5000) // Check if timer is expired...
+          {
+            // Timer expired. Do the things.
+            bpHTimerEnded = true;
+          }
+        }
+      }
+      else  // If pH is no longer out of range...
+      {
+        bpHTimerStarted = false;
+        bpHTimerEnded = false;
+      }   
+    }
 
-    default:
-      break;
+    else  // If we are waiting for mixture to become homogenous
+    {
+    }
   }
-  
+  uiHandler();
 }
