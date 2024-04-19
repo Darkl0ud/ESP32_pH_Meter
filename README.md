@@ -1,4 +1,4 @@
-# ESP32 pH Meter Platform
+# ESP32 pH Meter
 ![Static Badge](https://img.shields.io/badge/Status-Deep_Development/Works-yellow)
 
 Uses PH-4502C pH controller board and SSD1306 screen to display pH averaged over one second with the highest and lowest values disacarded, refreshed on screen every second.
