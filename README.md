@@ -29,3 +29,4 @@ POT2 – PH LIMIT SETTING<br>
 ## TODO
 - [ ] Reimplement SSD1306 LED Display
 - [ ] pH changes with temperature, and currently there is no accounting for this within the code.
+- [ ] Increase rate at which samples are taken... Multisampling may help obtain a more accurate reading.
