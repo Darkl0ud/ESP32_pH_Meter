@@ -51,33 +51,30 @@ void setup()  {
 }
 
 void calculateAveragepH() {
-    if (currentMillis - lastpHMillis >= 100)  { // Once 100ms have passed...
-    lastpHMillis = currentMillis;  // Save the current time.
-    rawAnalog = analogRead(PH_READ_PIN) / 4095.0; // Read from pH probe. Gives an analog 0-1 value.
-    float b;
-    float pH;
-
-    if (rawAnalog >= pH14Cal && rawAnalog <= pH10Cal) {  // pH 14 - 10
-      b = 14 - ((14.0 - 10.0) / (pH14Cal - pH10Cal)) * pH14Cal;  // Calculate Y Intercept based off of pH Calibration slope.
-      pH = ((14.0 - 10.0) / (pH14Cal - pH10Cal)) * rawAnalog + b;
-    }
-    
-    if (rawAnalog >= pH10Cal && rawAnalog <= pH7Cal)  {  // pH 10 - 7
-      b = 10 - ((10.0 - 7.0) / (pH10Cal - pH7Cal)) * pH10Cal;  // Calculate Y Intercept based off of pH Calibration slope.
-      pH = ((10.0 - 7.0) / (pH10Cal - pH7Cal)) * rawAnalog + b;
-    }
-
-    if (rawAnalog >= pH7Cal && rawAnalog <= pH4Cal) {  // pH 7 - 4
-      b = 7 - ((7.0 - 4.0) / (pH7Cal - pH4Cal)) * pH7Cal;  // Calculate Y Intercept based off of pH Calibration slope.
-      pH = ((7.0 - 4.0) / (pH7Cal - pH4Cal)) * rawAnalog + b;
-    }
-
-    if (rawAnalog >= pH4Cal && rawAnalog <= pH0Cal) {  // pH 4 - 0
-      b = 4 - ((4.0 - 0.0) / (pH4Cal - pH0Cal)) * pH4Cal;  // Calculate Y Intercept based off of pH Calibration slope.
-      pH = ((4.0 - 0.0) / (pH4Cal - pH0Cal)) * rawAnalog + b;
-    }
-    pHAnalogArray[j] = pH;
-    j++;
+  if (currentMillis - lastpHMillis >= 100)  { // Once 100ms have passed...
+  lastpHMillis = currentMillis;  // Save the current time.
+  rawAnalog = analogRead(PH_READ_PIN) / 4095.0; // Read from pH probe. Gives an analog 0-1 value.
+  float b;
+  float pH;
+  if (rawAnalog >= pH14Cal && rawAnalog <= pH10Cal) {  // pH 14 - 10
+    b = 14 - ((14.0 - 10.0) / (pH14Cal - pH10Cal)) * pH14Cal;  // Calculate Y Intercept based off of pH Calibration slope.
+    pH = ((14.0 - 10.0) / (pH14Cal - pH10Cal)) * rawAnalog + b;
+  }
+  
+  if (rawAnalog >= pH10Cal && rawAnalog <= pH7Cal)  {  // pH 10 - 7
+    b = 10 - ((10.0 - 7.0) / (pH10Cal - pH7Cal)) * pH10Cal;  // Calculate Y Intercept based off of pH Calibration slope.
+    pH = ((10.0 - 7.0) / (pH10Cal - pH7Cal)) * rawAnalog + b;
+  }
+  if (rawAnalog >= pH7Cal && rawAnalog <= pH4Cal) {  // pH 7 - 4
+    b = 7 - ((7.0 - 4.0) / (pH7Cal - pH4Cal)) * pH7Cal;  // Calculate Y Intercept based off of pH Calibration slope.
+    pH = ((7.0 - 4.0) / (pH7Cal - pH4Cal)) * rawAnalog + b;
+  }
+  if (rawAnalog >= pH4Cal && rawAnalog <= pH0Cal) {  // pH 4 - 0
+    b = 4 - ((4.0 - 0.0) / (pH4Cal - pH0Cal)) * pH4Cal;  // Calculate Y Intercept based off of pH Calibration slope.
+    pH = ((4.0 - 0.0) / (pH4Cal - pH0Cal)) * rawAnalog + b;
+  }
+  pHAnalogArray[j] = pH;
+  j++;
   }
    
   if (currentMillis - lastSecond >= 1000) {  // Once 1000ms have passed...
