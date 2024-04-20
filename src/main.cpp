@@ -1,6 +1,7 @@
 #include <main.h>
 
-void IRAM_ATTR buttonUpPressed() {
+// Button interrupt functions
+void buttonUpPressed() {
   if (digitalRead(UP_BUTTON_PIN) == 1)  {
     upPressed = true;
   }
@@ -10,7 +11,7 @@ void IRAM_ATTR buttonUpPressed() {
   }
 }
 
-void IRAM_ATTR buttonDownPressed() {
+void buttonDownPressed() {
   if (digitalRead(DOWN_BUTTON_PIN) == 1)  {
     downPressed = true;
   }
@@ -20,7 +21,7 @@ void IRAM_ATTR buttonDownPressed() {
   }
 }
 
-void IRAM_ATTR buttonLeftPressed() {
+void buttonLeftPressed() {
   if (digitalRead(LEFT_BUTTON_PIN) == 1)  {
     leftPressed = true;
   }
@@ -30,7 +31,7 @@ void IRAM_ATTR buttonLeftPressed() {
   }
 }
 
-void IRAM_ATTR buttonRightChanged() {
+void buttonRightPressed() {
   if (digitalRead(RIGHT_BUTTON_PIN) == 1)  {
     rightPressed = true;
   }
@@ -45,16 +46,41 @@ void setupPins(){
   pinMode(PH_READ_PIN, INPUT);
   
   // Set arrow keys
-  for (int& pin : arrowPins) {
-    pinMode(pin, INPUT_PULLDOWN);
+  for (int i = 0; i < sizeof(arrowPins) / sizeof(arrowPins[0]); i++) {
+    pinMode(arrowPins[i], INPUT_PULLDOWN);
+    attachInterrupt(arrowPins[i], buttonInterruptHandlers[i], CHANGE);
   }
 }
 
-float calculateCalibratedpH(float input, float pHRangeHigh, float pHRangeLow, float pHHighCal, float pHLowCal){
-
+// Returns calibrated pH value from input
+float calculateCalibratedpH(float input, float pHRangeHigh, float pHRangeLow, 
+                            float pHHighCal, float pHLowCal){
   float slope = (pHRangeHigh - pHRangeLow) / (pHHighCal - pHLowCal);
   float intercept = pHRangeHigh - slope * pHHighCal; 
   return slope * rawAnalog + intercept;
+}
+
+// Returns calibrated pH value depending on pH range
+float getCalibratedpH(){
+  rawAnalog = analogRead(PH_READ_PIN) / 4095.0; 
+
+  if (rawAnalog >= pH14Cal && rawAnalog <= pH10Cal) {
+    pH = calculateCalibratedpH(rawAnalog, 14, 10, pH14Cal, pH10Cal);
+  }
+
+  if (rawAnalog >= pH10Cal && rawAnalog <= pH7Cal)  {
+    pH = calculateCalibratedpH(rawAnalog, 10, 7, pH10Cal, pH7Cal);
+  }
+
+  if (rawAnalog >= pH7Cal && rawAnalog <= pH4Cal) {
+    pH = calculateCalibratedpH(rawAnalog, 7, 4, pH7Cal, pH4Cal);
+  }
+
+  if (rawAnalog >= pH4Cal && rawAnalog <= pH0Cal) {  
+    pH = calculateCalibratedpH(rawAnalog, 4, 0, pH4Cal, pH0Cal);
+  }
+  
+  return pH;
 }
 
 void calculateAveragepH() {
@@ -62,26 +88,10 @@ void calculateAveragepH() {
   if (currentMillis - lastpHMillis >= 100)  { 
     // Save the current time.
     lastpHMillis = currentMillis;  
-    // Read from pH probe. Converts to a float 0-1 value.
-    rawAnalog = analogRead(PH_READ_PIN) / 4095.0; 
 
-    if (rawAnalog >= pH14Cal && rawAnalog <= pH10Cal) {
-      pH = calculateCalibratedpH(rawAnalog, 14, 10, pH14Cal, pH10Cal);
-    }
 
-    if (rawAnalog >= pH10Cal && rawAnalog <= pH7Cal)  {
-      pH = calculateCalibratedpH(rawAnalog, 10, 7, pH10Cal, pH7Cal);
-    }
 
-    if (rawAnalog >= pH7Cal && rawAnalog <= pH4Cal) {
-      pH = calculateCalibratedpH(rawAnalog, 7, 4, pH7Cal, pH4Cal);
-    }
-
-    if (rawAnalog >= pH4Cal && rawAnalog <= pH0Cal) {  
-      pH = calculateCalibratedpH(rawAnalog, 4, 0, pH4Cal, pH0Cal);
-    }
-
-    pHAnalogArray[j] = pH;  
+    pHAnalogArray[j] = getCalibratedpH();  
     j++;
   }
    
@@ -127,13 +137,9 @@ void calculateAveragepH() {
   }
 }
  
- void setup()  {
+void setup()  {
   Serial.begin(115200);
   setupPins();
-  attachInterrupt(UP_BUTTON_PIN, buttonUpPressed, CHANGE);
-  attachInterrupt(DOWN_BUTTON_PIN, buttonDownPressed, CHANGE);
-  attachInterrupt(LEFT_BUTTON_PIN, buttonLeftPressed, CHANGE);
-  attachInterrupt(RIGHT_BUTTON_PIN, buttonRightChanged, CHANGE);
 }
 
 void loop() {

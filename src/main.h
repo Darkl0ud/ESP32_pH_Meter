@@ -1,14 +1,22 @@
 #include <Arduino.h>
 
-// Set to the corresponding pin on your MC for the pH sensor
+// Set to the corresponding pin for the pH sensor
 #define PH_READ_PIN 8
 
-// Set to the corresponding pins on your MC for the buttons, set into an array
+// Set to the corresponding pins for the buttons, set into an array
 #define UP_BUTTON_PIN 41
 #define DOWN_BUTTON_PIN 38
 #define LEFT_BUTTON_PIN 35
 #define RIGHT_BUTTON_PIN 47
-static int arrowPins[4] = {UP_BUTTON_PIN, DOWN_BUTTON_PIN, LEFT_BUTTON_PIN, RIGHT_BUTTON_PIN};
+const int arrowPins[] = {UP_BUTTON_PIN, DOWN_BUTTON_PIN, LEFT_BUTTON_PIN, RIGHT_BUTTON_PIN};
+
+void IRAM_ATTR buttonUpPressed();
+void IRAM_ATTR buttonDownPressed();
+void IRAM_ATTR buttonLeftPressed();
+void IRAM_ATTR buttonRightPressed();
+
+// Put button interrupt functions into an array
+void (*buttonInterruptHandlers[])() = {buttonUpPressed, buttonDownPressed, buttonLeftPressed, buttonRightPressed};
 
 // Bools store if we pressed the button when its corresponding IRAM function is called
 bool upPressed = false;
