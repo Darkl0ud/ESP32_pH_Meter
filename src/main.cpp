@@ -1,7 +1,7 @@
 #include <main.h>
 
 // Button interrupt functions
-void buttonUpPressed() {
+void upButtonChanged() {
   if (digitalRead(UP_BUTTON_PIN) == 1)  {
     upPressed = true;
   }
@@ -11,7 +11,7 @@ void buttonUpPressed() {
   }
 }
 
-void buttonDownPressed() {
+void downButtonChanged() {
   if (digitalRead(DOWN_BUTTON_PIN) == 1)  {
     downPressed = true;
   }
@@ -21,7 +21,7 @@ void buttonDownPressed() {
   }
 }
 
-void buttonLeftPressed() {
+void leftButtonChanged() {
   if (digitalRead(LEFT_BUTTON_PIN) == 1)  {
     leftPressed = true;
   }
@@ -31,7 +31,7 @@ void buttonLeftPressed() {
   }
 }
 
-void buttonRightPressed() {
+void rightButtonChanged() {
   if (digitalRead(RIGHT_BUTTON_PIN) == 1)  {
     rightPressed = true;
   }
@@ -57,7 +57,7 @@ float calculateCalibratedpH(float input, float pHRangeHigh, float pHRangeLow,
                             float pHHighCal, float pHLowCal){
   float slope = (pHRangeHigh - pHRangeLow) / (pHHighCal - pHLowCal);
   float intercept = pHRangeHigh - slope * pHHighCal; 
-  return slope * rawAnalog + intercept;
+  return slope * input + intercept;
 }
 
 // Returns calibrated pH value depending on pH range
@@ -79,7 +79,6 @@ float getCalibratedpH(){
   if (rawAnalog >= pH4Cal && rawAnalog <= pH0Cal) {  
     pH = calculateCalibratedpH(rawAnalog, 4, 0, pH4Cal, pH0Cal);
   }
-  
   return pH;
 }
 
@@ -88,10 +87,7 @@ void calculateAveragepH() {
   if (currentMillis - lastpHMillis >= 100)  { 
     // Save the current time.
     lastpHMillis = currentMillis;  
-
-
-
-    pHAnalogArray[j] = getCalibratedpH();  
+    pHAnalogArray[j] = getCalibratedpH();
     j++;
   }
    
@@ -133,16 +129,19 @@ void calculateAveragepH() {
 
     // Calculate average of pH readings over 1 second
     pHAverage = Sum/countsOverZero; 
-    Serial.println(pHAverage);
+    Serial.println("AVERAGE PH: " + String(pHAverage));
   }
 }
  
-void setup()  {
+void setup() {
   Serial.begin(115200);
   setupPins();
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); // Initialize Wire with custom I2C SDA and SCL pins
+  ui.setupDisplay();
 }
 
 void loop() {
   currentMillis = millis();
   calculateAveragepH();
+  ui.updateDisplay();
 }
