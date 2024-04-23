@@ -27,7 +27,7 @@ POT2 – PH LIMIT SETTING<br>
 ![ph4502c](https://github.com/Darkl0ud/ESP32_pH_Meter/blob/main/README/ph4502c.jpg)
 
 ## TODO
-- [ ] Reimplement SSD1306 LED Display
+- [X] Reimplement SSD1306 LED Display
 - [ ] Button Debounce
 - [ ] pH changes with temperature, and currently there is no accounting for this within the code.
 - [ ] Increase rate at which samples are taken... Multisampling may help obtain a more accurate reading.
