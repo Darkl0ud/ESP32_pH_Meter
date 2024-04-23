@@ -37,9 +37,17 @@ void setup() {
 
 void loop() {
   ui.clearDisplay();
+
+  if (ph.getAveragepH(PH_READ_PIN))
+  {
+    /* code */
+  }
+  
+
   switch (mainMenuSelection)
   {
     case LeftMenuState::INFO:
+      ui.drawpHSubMenu();
       ui.drawpH(ph.getAveragepH(PH_READ_PIN));
 
       if (upPressed)    
@@ -69,7 +77,8 @@ void loop() {
 
       if (!menuActive)
       {
-        ui.drawAlarmMenu(pHAlarmTriggerVal);
+        ui.drawpHSubMenu();
+        ui.drawAlarmInfo(pHAlarmTriggerVal);
 
         if (upPressed)    
         {   
@@ -91,39 +100,68 @@ void loop() {
         if (rightPressed)   
         {   
           rightPressed = false;   
-          menuActive = true;    
+          menuActive = true;
         }         
       }
-      //  Menu is active
+      //  Menu is Active, manuActive = true
       else
       {
-        if (upPressed)    
-        { 
-          pHAlarmTriggerVal += 0.05;
-          upPressed = false;    
-        }   
-
-        if (downPressed)    
+        
+        if (!alarmSubMenuActive)
         {
-          pHAlarmTriggerVal -= 0.05;
-          downPressed = false;    
-        }   
+          if (upPressed)    
+          { 
+            upPressed = false;    
+          }   
 
-        if (leftPressed)    
-        {   
-          leftPressed = false;
-          menuActive = false;     
-        }   
+          if (downPressed)    
+          {
+            downPressed = false;    
+          }   
 
-        if (rightPressed)   
-        {   
-          rightPressed = false;   
+          if (leftPressed)    
+          {   
+            leftPressed = false;
+            menuActive = false;     
+          }   
+
+          if (rightPressed)   
+          {   
+            rightPressed = false;
+            alarmSubMenuActive = true;
+          }
         }
+        // Alarm Submenu is Active, alarmSubMenuActive = true
+        else
+        {
+          if (upPressed)    
+          { 
+            upPressed = false;    
+          }   
+
+          if (downPressed)    
+          {
+            downPressed = false;    
+          }   
+
+          if (leftPressed)    
+          {   
+            leftPressed = false;
+            alarmSubMenuActive = false;     
+          }   
+
+          if (rightPressed)   
+          {   
+            rightPressed = false;
+          }        
+        }
+        
+        ui.drawAlarmInfo(pHAlarmTriggerVal);
 
         //Flash currently set pH alarm value
         if (millis() > flashTimer + 200)
         {
-          ui.drawAlarmMenu(pHAlarmTriggerVal);
+          ui.drawpHSubMenu();
 
           if (millis() > flashTimer + 400)
           {

@@ -47,6 +47,7 @@ enum class LeftMenuState {
 // States
 LeftMenuState mainMenuSelection = LeftMenuState::INFO;
 bool menuActive = false;
+bool alarmSubMenuActive = false;
 
 float pHAlarmTriggerVal = 12.00;
 unsigned long int flashTimer;

@@ -50,22 +50,25 @@ void UI::drawpH(float pH)
   display.setTextColor(WHITE);
   display.setTextSize(3);
   display.setFont(&Picopixel);
-  display.setCursor(38, 17);
-  display.println("pH");
   display.setTextSize(4);
   display.setCursor(64, 20);
   display.println(pH);
 }
 
-void UI::drawAlarmMenu(float phAlarmTriggerVal){
+void UI::drawpHSubMenu(){
   display.setTextColor(WHITE);
   display.setTextSize(3);
   display.setFont(&Picopixel);
   display.setCursor(38, 17);
   display.println("pH");
+}
+
+void UI::drawAlarmInfo(float field1){
+  display.setTextColor(WHITE);
   display.setTextSize(4);
+  display.setFont(&Picopixel);
   display.setCursor(64, 20);
-  display.println(phAlarmTriggerVal);
+  display.println(field1);
 }
 
 void UI::drawCalMenu(){
