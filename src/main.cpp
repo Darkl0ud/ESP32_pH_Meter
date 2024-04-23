@@ -2,43 +2,19 @@
 
 // Button interrupt functions
 void upButtonChanged() {
-  if (digitalRead(UP_BUTTON_PIN) == 1)  {
-    upPressed = true;
-  }
-   
-  else  {
-    upPressed = false;
-  }
+  upPressed = true;
 }
 
 void downButtonChanged() {
-  if (digitalRead(DOWN_BUTTON_PIN) == 1)  {
-    downPressed = true;
-  }
-
-  else  {
-    downPressed = false;
-  }
+  downPressed = true;
 }
 
 void leftButtonChanged() {
-  if (digitalRead(LEFT_BUTTON_PIN) == 1)  {
-    leftPressed = true;
-  }
-
-  else  {
-    leftPressed = false;
-  }
+  leftPressed = true;
 }
 
 void rightButtonChanged() {
-  if (digitalRead(RIGHT_BUTTON_PIN) == 1)  {
-    rightPressed = true;
-  }
-
-  else  {
-    rightPressed = false;
-  }
+  rightPressed = true;
 }
 
 void setupPins(){
@@ -48,7 +24,7 @@ void setupPins(){
   // Set arrow keys
   for (int i = 0; i < sizeof(arrowPins) / sizeof(arrowPins[0]); i++) {
     pinMode(arrowPins[i], INPUT_PULLDOWN);
-    attachInterrupt(arrowPins[i], buttonInterruptHandlers[i], CHANGE);
+    attachInterrupt(arrowPins[i], buttonInterruptHandlers[i], HIGH);
   }
 }
  
@@ -60,5 +36,155 @@ void setup() {
 }
 
 void loop() {
-  ui.updateDisplay(phc.calculateAveragepH(PH_READ_PIN));
+  ui.clearDisplay();
+  switch (mainMenuSelection)
+  {
+    case LeftMenuState::INFO:
+      ui.drawpH(ph.getAveragepH(PH_READ_PIN));
+
+      if (upPressed)    
+      {   
+        upPressed = false;    
+        mainMenuSelection = LeftMenuState::SYS;
+      }   
+  
+      if (downPressed)    
+      {
+        downPressed = false;    
+        mainMenuSelection = LeftMenuState::ALARM;   
+      }   
+  
+      if (leftPressed)    
+      {   
+        leftPressed = false;    
+      }   
+  
+      if (rightPressed)   
+      {   
+        rightPressed = false;   
+      }
+    break;    
+  
+    case LeftMenuState::ALARM:
+
+      if (!menuActive)
+      {
+        ui.drawAlarmMenu(pHAlarmTriggerVal);
+
+        if (upPressed)    
+        {   
+          upPressed = false;    
+          mainMenuSelection = LeftMenuState::INFO;    
+        }   
+
+        if (downPressed)    
+        {   
+          downPressed = false;    
+          mainMenuSelection = LeftMenuState::CAL;   
+        }   
+
+        if (leftPressed)    
+        {   
+          leftPressed = false;    
+        }   
+
+        if (rightPressed)   
+        {   
+          rightPressed = false;   
+          menuActive = true;    
+        }         
+      }
+      //  Menu is active
+      else
+      {
+        if (upPressed)    
+        { 
+          pHAlarmTriggerVal += 0.05;
+          upPressed = false;    
+        }   
+
+        if (downPressed)    
+        {
+          pHAlarmTriggerVal -= 0.05;
+          downPressed = false;    
+        }   
+
+        if (leftPressed)    
+        {   
+          leftPressed = false;
+          menuActive = false;     
+        }   
+
+        if (rightPressed)   
+        {   
+          rightPressed = false;   
+        }
+
+        //Flash currently set pH alarm value
+        if (millis() > flashTimer + 200)
+        {
+          ui.drawAlarmMenu(pHAlarmTriggerVal);
+
+          if (millis() > flashTimer + 400)
+          {
+            flashTimer = millis();
+          }
+        }
+      }
+      
+    break;    
+  
+    case LeftMenuState::CAL:    
+      if (upPressed)    
+      {   
+        upPressed = false;    
+        mainMenuSelection = LeftMenuState::ALARM;   
+      }   
+  
+      if (downPressed)    
+      {   
+        downPressed = false;    
+        mainMenuSelection = LeftMenuState::SYS;   
+      }   
+  
+      if (leftPressed)    
+      {   
+        leftPressed = false;    
+      }   
+  
+      if (rightPressed)   
+      {   
+        rightPressed = false;   
+      }   
+    break;    
+  
+    case LeftMenuState::SYS:    
+      if (upPressed)    
+      {   
+        upPressed = false;    
+        mainMenuSelection = LeftMenuState::CAL;   
+      }   
+  
+      if (downPressed)    
+      {   
+        downPressed = false;    
+        mainMenuSelection = LeftMenuState::INFO;    
+      }   
+  
+      if (leftPressed)    
+      {   
+        leftPressed = false;    
+      }   
+  
+      if (rightPressed)   
+      {   
+        rightPressed = false;   
+      }   
+    break;    
+  
+    default:    
+      break;    
+  }
+  ui.drawMainMenu(int(mainMenuSelection));
+ ui.updateDisplay(); 
 }

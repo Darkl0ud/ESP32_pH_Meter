@@ -1,7 +1,7 @@
 #include <pH.h>
 
 // Returns calibrated pH value from input
-float pHC::calculateCalibratedpH(float rawAnalog, float pHRangeHigh, float pHRangeLow, 
+float pH::calculateCalibratedpH(float rawAnalog, float pHRangeHigh, float pHRangeLow, 
                             float pHHighCal, float pHLowCal){
   float slope = (pHRangeHigh - pHRangeLow) / (pHHighCal - pHLowCal);
   float intercept = pHRangeHigh - slope * pHHighCal; 
@@ -9,7 +9,7 @@ float pHC::calculateCalibratedpH(float rawAnalog, float pHRangeHigh, float pHRan
 }
 
 // Returns calibrated pH value depending on pH range
-float pHC::getCalibratedpH(int readPin){
+float pH::getCalibratedpH(int readPin){
   float rawAnalog = analogRead(readPin) / 4095.0;
   if (rawAnalog >= pH14Cal && rawAnalog <= pH10Cal) {
     pH = calculateCalibratedpH(rawAnalog, 14, 10, pH14Cal, pH10Cal);
@@ -29,7 +29,7 @@ float pHC::getCalibratedpH(int readPin){
   return pH;
 }
 
-float pHC::calculateAveragepH(int readPin) {
+float pH::getAveragepH(int readPin) {
   unsigned long currentMillis = millis();
   // Once 100ms have passed...
   if (currentMillis - lastpHMillis >= 100)  { 

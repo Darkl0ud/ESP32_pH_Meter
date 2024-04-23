@@ -1,14 +1,18 @@
-#include <display.h>
+#include <ui.h>
 #include <pH.h>
 
 UI ui;
-pHC phc;
+pH ph;
+
 // Defines I2C pins for SSD1306 screen
 #define I2C_SCL_PIN 13
 #define I2C_SDA_PIN 14
 
 // Set to the corresponding pin for the pH sensor
 #define PH_READ_PIN 8
+
+// Set to corresponding pin for alarm high, this pin goes high if alarm state is met
+#define ALARM_HIGH_PIN 16
 
 // Set to the corresponding pins for the buttons, set into an array
 #define UP_BUTTON_PIN 4
@@ -31,3 +35,18 @@ bool upPressed = false;
 bool downPressed= false;
 bool leftPressed = false;
 bool rightPressed= false;
+
+// States for state machine
+enum class LeftMenuState {
+  INFO,
+  ALARM,
+  CAL,
+  SYS
+};
+
+// States
+LeftMenuState mainMenuSelection = LeftMenuState::INFO;
+bool menuActive = false;
+
+float pHAlarmTriggerVal = 12.00;
+unsigned long int flashTimer;
