@@ -1,5 +1,8 @@
 #include <main.h>
 
+UI ui;
+pH ph;
+
 // Button interrupt functions
 void upButtonChanged() {
   upPressed = true;
@@ -35,194 +38,135 @@ void setup() {
   ui.setupDisplay();
 }
 
+enum class States{
+  INFO, 
+  ALARM, 
+  CAL, 
+  SYS,
+  SETALARM
+};
+
+States currentState = States::INFO;
+
+States nextStateInfo(int buttonPress) {
+  if (buttonPress == 0) {
+    return States::SYS;
+  } else if (buttonPress == 1) {
+    return States::ALARM;
+  } else if (buttonPress == 2) {
+  } else if (buttonPress == 3) {
+  }
+  return States::INFO;
+}
+
+States nextStateAlarm(int buttonPress) {
+  if (buttonPress == 0) {
+    return States::INFO;
+  } else if (buttonPress == 1) {
+    return States::CAL;
+  }else if (buttonPress == 2) {
+  } else if (buttonPress == 3) {
+    return States::SETALARM;
+  }
+  return States::ALARM;
+}
+
+States nextStateCal(int buttonPress) {
+  if (buttonPress == 0) {
+    return States::ALARM;
+  } else if (buttonPress == 1) {
+    return States::SYS;
+  } else if (buttonPress == 2) {
+  } else if (buttonPress == 3) {
+  }
+  return States::CAL;
+}
+
+States nextStateSys(int buttonPress) {
+  if (buttonPress == 0) {
+    return States::CAL;
+  } else if (buttonPress == 1) {
+    return States::INFO;
+  } else if (buttonPress == 2) {
+  } else if (buttonPress == 3) {
+  }
+  return States::SYS;
+}
+
+States nextStateSetAlarm(int buttonPress) {
+  if (buttonPress == 0) {
+  } else if (buttonPress == 1) {
+  } else if (buttonPress == 2) {
+    return States::ALARM;
+  } else if (buttonPress == 3) {
+  }
+  return States::SETALARM;
+}
+
+// Array of function pointers for state transitions
+States (*nextStateFunc[])(int) = {
+  nextStateInfo,
+  nextStateAlarm,
+  nextStateCal,
+  nextStateSys,
+  nextStateSetAlarm
+};
+
 void loop() {
   ui.clearDisplay();
 
-  if (ph.getAveragepH(PH_READ_PIN))
+  if (upPressed)
   {
-    /* code */
+    Serial.println("UP");
+    currentState = nextStateFunc[static_cast<int>(currentState)](0);
+    upPressed = false;
+  }
+  if (downPressed)
+  {
+    Serial.println("DOWN");
+    currentState = nextStateFunc[static_cast<int>(currentState)](1);
+    downPressed = false;
+  }
+  if (leftPressed)
+  {
+    Serial.println("LEFT");
+    currentState = nextStateFunc[static_cast<int>(currentState)](2);
+    leftPressed = false;
+  }
+  if (rightPressed)
+  {
+    Serial.println("RIGHT");
+    currentState = nextStateFunc[static_cast<int>(currentState)](3);
+    rightPressed = false;
   }
   
-
-  switch (mainMenuSelection)
+  switch (currentState)
   {
-    case LeftMenuState::INFO:
-      ui.drawpHSubMenu();
-      ui.drawpH(ph.getAveragepH(PH_READ_PIN));
-
-      if (upPressed)    
-      {   
-        upPressed = false;    
-        mainMenuSelection = LeftMenuState::SYS;
-      }   
+  case States::INFO:
+    ui.drawMainMenu(0);
+  break;
   
-      if (downPressed)    
-      {
-        downPressed = false;    
-        mainMenuSelection = LeftMenuState::ALARM;   
-      }   
+  case States::ALARM:
+    ui.drawMainMenu(1);
+    ui.drawpHSubMenu();
+  break;
   
-      if (leftPressed)    
-      {   
-        leftPressed = false;    
-      }   
+  case States::CAL:
+    ui.drawMainMenu(2);
+  break;
   
-      if (rightPressed)   
-      {   
-        rightPressed = false;   
-      }
-    break;    
-  
-    case LeftMenuState::ALARM:
+  case States::SYS:
+    ui.drawMainMenu(3);
+  break;
 
-      if (!menuActive)
-      {
-        ui.drawpHSubMenu();
-        ui.drawAlarmInfo(pHAlarmTriggerVal);
+  case States::SETALARM:
+    ui.drawMainMenu(1);
+    //ui.drawpHSubMenu();
+  break;
 
-        if (upPressed)    
-        {   
-          upPressed = false;    
-          mainMenuSelection = LeftMenuState::INFO;    
-        }   
-
-        if (downPressed)    
-        {   
-          downPressed = false;    
-          mainMenuSelection = LeftMenuState::CAL;   
-        }   
-
-        if (leftPressed)    
-        {   
-          leftPressed = false;    
-        }   
-
-        if (rightPressed)   
-        {   
-          rightPressed = false;   
-          menuActive = true;
-        }         
-      }
-      //  Menu is Active, manuActive = true
-      else
-      {
-        
-        if (!alarmSubMenuActive)
-        {
-          if (upPressed)    
-          { 
-            upPressed = false;    
-          }   
-
-          if (downPressed)    
-          {
-            downPressed = false;    
-          }   
-
-          if (leftPressed)    
-          {   
-            leftPressed = false;
-            menuActive = false;     
-          }   
-
-          if (rightPressed)   
-          {   
-            rightPressed = false;
-            alarmSubMenuActive = true;
-          }
-        }
-        // Alarm Submenu is Active, alarmSubMenuActive = true
-        else
-        {
-          if (upPressed)    
-          { 
-            upPressed = false;    
-          }   
-
-          if (downPressed)    
-          {
-            downPressed = false;    
-          }   
-
-          if (leftPressed)    
-          {   
-            leftPressed = false;
-            alarmSubMenuActive = false;     
-          }   
-
-          if (rightPressed)   
-          {   
-            rightPressed = false;
-          }        
-        }
-        
-        ui.drawAlarmInfo(pHAlarmTriggerVal);
-
-        //Flash currently set pH alarm value
-        if (millis() > flashTimer + 200)
-        {
-          ui.drawpHSubMenu();
-
-          if (millis() > flashTimer + 400)
-          {
-            flashTimer = millis();
-          }
-        }
-      }
-      
-    break;    
-  
-    case LeftMenuState::CAL:    
-      if (upPressed)    
-      {   
-        upPressed = false;    
-        mainMenuSelection = LeftMenuState::ALARM;   
-      }   
-  
-      if (downPressed)    
-      {   
-        downPressed = false;    
-        mainMenuSelection = LeftMenuState::SYS;   
-      }   
-  
-      if (leftPressed)    
-      {   
-        leftPressed = false;    
-      }   
-  
-      if (rightPressed)   
-      {   
-        rightPressed = false;   
-      }   
-    break;    
-  
-    case LeftMenuState::SYS:    
-      if (upPressed)    
-      {   
-        upPressed = false;    
-        mainMenuSelection = LeftMenuState::CAL;   
-      }   
-  
-      if (downPressed)    
-      {   
-        downPressed = false;    
-        mainMenuSelection = LeftMenuState::INFO;    
-      }   
-  
-      if (leftPressed)    
-      {   
-        leftPressed = false;    
-      }   
-  
-      if (rightPressed)   
-      {   
-        rightPressed = false;   
-      }   
-    break;    
-  
-    default:    
-      break;    
+  default:
+    break;
   }
-  ui.drawMainMenu(int(mainMenuSelection));
- ui.updateDisplay(); 
+  //Serial.println(int(currentState));
+  ui.updateDisplay();
 }
