@@ -44,7 +44,9 @@ class UI {
         void drawpH(float pH);
         void drawMainMenu(int mainMenuSelection);
         void drawpHSubMenu();
-        void drawAlarmInfo(float field1);
+        void drawECSubMenu();
+        void drawpHAlarm(float field1);
+        void drawECAlarm(float field1);
         void drawCalMenu();
         void drawSysMenu();
         //void drawCursor();

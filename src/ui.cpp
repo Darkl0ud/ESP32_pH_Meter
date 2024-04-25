@@ -52,11 +52,27 @@ void UI::drawpHSubMenu(){
   display.println("pH");
 }
 
-void UI::drawAlarmInfo(float field1){
+void UI::drawECSubMenu(){
+  display.setTextColor(WHITE);
+  display.setTextSize(3);
+  display.setFont(&Picopixel);
+  display.setCursor(38, 47);
+  display.println("EC");
+}
+
+void UI::drawpHAlarm(float field1){
   display.setTextColor(WHITE);
   display.setTextSize(4);
   display.setFont(&Picopixel);
   display.setCursor(64, 20);
+  display.println(field1);
+}
+
+void UI::drawECAlarm(float field1){
+  display.setTextColor(WHITE);
+  display.setTextSize(4);
+  display.setFont(&Picopixel);
+  display.setCursor(64, 50);
   display.println(field1);
 }
 

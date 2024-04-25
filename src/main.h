@@ -32,17 +32,22 @@ bool upPressed = false;
 bool downPressed= false;
 bool leftPressed = false;
 bool rightPressed= false;
+unsigned long lastInputTime;
 
+float ECAlarmTriggerVal = 14.20;
 float pHAlarmTriggerVal = 12.00;
 unsigned long int flashTimer;
 
-//  //Flash currently set pH alarm value
-//  if (millis() > flashTimer + 200)
-//  {
-//    ui.drawpHSubMenu();
-//
-//    if (millis() > flashTimer + 400)
-//    {
-//      flashTimer = millis();
-//    }
-//  }
+// State machine variables
+enum class States{
+  INFO, 
+  ALARM,
+  SELECTPHALARM,
+  SELECTECALARM,
+  SETPHALARM,
+  SETECALARM,
+  CAL, 
+  SYS,
+};
+
+States currentState = States::INFO;
