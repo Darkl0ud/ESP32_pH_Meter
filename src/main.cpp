@@ -5,22 +5,31 @@ pH ph;
 
 // Button interrupt functions
 void upButtonChanged() {
-  //if (millis() >= lastInputTime + 100)
-  //{
-    upPressed = true;
-  //}
+  if (millis() >= lastInputTime + 100 && digitalRead(UP_BUTTON_PIN))
+  {upPressed = true;}
+  else
+  {upPressed = false;}
 }
 
 void downButtonChanged() {
-  downPressed = true;
+  if (millis() >= lastInputTime + 100 && digitalRead(DOWN_BUTTON_PIN))
+  {downPressed = true;}
+  else
+  {downPressed = false;}
 }
 
 void leftButtonChanged() {
-  leftPressed = true;
+  if (millis() >= lastInputTime + 100 && digitalRead(LEFT_BUTTON_PIN))
+  {leftPressed = true;}
+  else
+  {leftPressed = false;}
 }
 
 void rightButtonChanged() {
-  rightPressed = true;
+  if (millis() >= lastInputTime + 100 && digitalRead(RIGHT_BUTTON_PIN))
+  {rightPressed = true;}
+  else
+  {rightPressed = false;}
 }
 
 void setupPins(){
@@ -35,7 +44,7 @@ void setupPins(){
 }
  
 void setup() {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   setupPins();
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); // Initialize Wire with custom I2C SDA and SCL pins
   ui.setupDisplay();
@@ -155,9 +164,8 @@ void loop() {
 
   if (upPressed)
   {
-    Serial.println("CHANGED");
     currentState = nextStateFunc[static_cast<int>(currentState)](0);
-    //lastInputTime = millis();
+    lastInputTime = millis();
     upPressed = false;
   }
   if (downPressed)

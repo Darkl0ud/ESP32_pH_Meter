@@ -1,5 +1,6 @@
 #include <ui.h>
 #include <pH.h>
+#include <sm.h>
 
 // Defines I2C pins for SSD1306 screen
 #define I2C_SCL_PIN 13
