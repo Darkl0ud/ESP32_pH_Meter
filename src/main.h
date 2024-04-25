@@ -1,13 +1,8 @@
-#include <ui.h>
-#include <pH.h>
 #include <sm.h>
 
 // Defines I2C pins for SSD1306 screen
 #define I2C_SCL_PIN 13
 #define I2C_SDA_PIN 14
-
-// Set to the corresponding pin for the pH sensor
-#define PH_READ_PIN 8
 
 // Set to corresponding pin for alarm high, this pin goes high if alarm state is met
 #define ALARM_HIGH_PIN 16
@@ -34,21 +29,3 @@ bool downPressed= false;
 bool leftPressed = false;
 bool rightPressed= false;
 unsigned long lastInputTime;
-
-float ECAlarmTriggerVal = 14.20;
-float pHAlarmTriggerVal = 12.00;
-unsigned long int flashTimer;
-
-// State machine variables
-enum class States{
-  INFO, 
-  ALARM,
-  SELECTPHALARM,
-  SELECTECALARM,
-  SETPHALARM,
-  SETECALARM,
-  CAL, 
-  SYS,
-};
-
-States currentState = States::INFO;

@@ -91,15 +91,3 @@ void UI::clearDisplay(){
 void UI::updateDisplay(){
   display.display();
 }
-
-
-//void UI::drawCursor(){
-//  if (optionSelected)
-//  {
-//    display.drawBitmap(32, menuOptionHighlighted * 16 + 1, rightArrowBitmap, 14, 14, 1);
-//  }
-//  else
-//  {
-//    display.drawBitmap(32, menuOptionHighlighted * 16 + 1, leftArrowBitmap, 14, 14, 1);
-//  }
-//}
